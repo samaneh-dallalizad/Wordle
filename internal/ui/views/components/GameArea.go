@@ -1,24 +1,40 @@
 package components
 
 import (
+	"fmt"
+	"wordleGame/internal/infrastructure/domain/wordlesite"
+
 	g "github.com/maragudk/gomponents"
 	. "github.com/maragudk/gomponents/html"
 )
 
-func GameArea() g.Node {
-	var count [6]int
-	return Div(
-		Ul(
-			g.Group(g.Map(count[:], func(i int) g.Node {
-				return Li(Class("colums  is-multiline"),
-					g.Group(g.Map(count[0:5], func(i int) g.Node {
-						return Div(Class("column is-5"),
-							Input(Type("text"), MaxLength("10")),
+var classForResponse = []string{"has-background-dark", "has-background-warning", "has-background-success"}
+
+func GameArea(d *wordlesite.Grid) g.Node {
+	var row = -1
+	var activeRow = 0
+	return FormEl(Method("post"), Action("/guess_result"), Div(
+		Ul(Class("my-5"),
+			g.Group(g.Map(d.State[:], func(r wordlesite.GuessResult) g.Node {
+				row += 1
+				if r[0].Letter != "" {
+					activeRow += 1
+				}
+				return Li(Class(fmt.Sprintf("columns is-multiline row row-%d", row)),
+					g.Group(g.Map(r[:], func(b wordlesite.Block) g.Node {
+						return Div(Class("column is-1 row-block"),
+
+							g.If(activeRow == row, Input(Class("input is-large has-text-centered is-uppercase"), Type("text"), MaxLength("1"), Name("char"))),
+							g.If(activeRow > row, Input(Class(fmt.Sprintf("input is-large has-text-centered is-uppercase %s", classForResponse[b.State])), Type("text"), MaxLength("1"), Disabled(), Value(b.Letter))),
+							g.If(activeRow < row, Input(Class("input is-large has-text-centered is-uppercase"), Type("text"), MaxLength("1"), Disabled())),
 						)
 					})),
 				)
 			})),
 		),
-		Button(g.Text("save")),
+
+		Button(Class("button is-primary"), g.Text("submit"), Type("submit")),
+		A(Class("button is-danger ml-2"), g.Text("start new game"), Href("/new_game")),
+	),
 	)
 }

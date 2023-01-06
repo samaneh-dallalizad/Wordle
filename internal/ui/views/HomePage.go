@@ -2,13 +2,15 @@ package views
 
 import (
 	g "github.com/maragudk/gomponents"
-	//nolint:stylecheck,golint
+
+	"wordleGame/internal/infrastructure/domain/wordlesite"
 	"wordleGame/internal/ui/views/components"
 
 	. "github.com/maragudk/gomponents/html"
 )
 
-func HomeView(n string) g.Node {
+func HomeView(g *wordlesite.Grid) g.Node {
+
 	componentsView := Doctype(
 		HTML(
 			Head(
@@ -21,15 +23,20 @@ func HomeView(n string) g.Node {
 					Type("text/javascript"),
 					Src("/scripts/delete-notification.js"),
 				),
+
+				Script(
+					Type("text/javascript"),
+					Src("/scripts/modal.js"),
+				),
 			),
 			Lang("en"),
 
 			Body(
 
 				Div(Class("container"),
-					H1(g.Text(n)),
 					components.HowPlayGame(),
-					components.GameArea(),
+					components.GameArea(g),
+					//components..Modal(),
 				),
 			),
 		),
