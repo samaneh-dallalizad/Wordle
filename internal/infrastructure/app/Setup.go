@@ -25,10 +25,10 @@ type ApplicationServer struct {
 
 func (s *ApplicationServer) registerHandlers() {
 
+	s.State.Handler.Use(s.errhandler())
 	s.State.Handler.Static("/scripts", fmt.Sprintf("%sweb/scripts", s.State.Config.WebAssetsFolder))
 	s.State.Handler.Static("/styles", fmt.Sprintf("%sweb/styles", s.State.Config.WebAssetsFolder))
 	s.State.Handler.Static("/assets", fmt.Sprintf("%sweb/assets", s.State.Config.WebAssetsFolder))
-
 	s.State.Handler.Handle(http.MethodGet, "/", s.HomePageHandler())
 	s.State.Handler.Handle(http.MethodPost, "/guess_result", s.SubmitGuessHandler())
 	s.State.Handler.Handle(http.MethodGet, "/new_game", s.StartNewGame())

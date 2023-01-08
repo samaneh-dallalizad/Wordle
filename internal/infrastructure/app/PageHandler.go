@@ -2,7 +2,9 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 	"unicode"
 	"wordleGame/internal/infrastructure/domain/wordlesite"
@@ -14,6 +16,8 @@ import (
 func (s *ApplicationServer) HomePageHandler() func(*gin.Context) {
 
 	return func(c *gin.Context) {
+		e := c.DefaultQuery("error", "")
+
 		gameCookie, err := c.Cookie("game")
 		if err != nil {
 			word, startErr := wordlesite.StartGame()
@@ -39,7 +43,7 @@ func (s *ApplicationServer) HomePageHandler() func(*gin.Context) {
 			return
 		}
 		c.Status(http.StatusOK)
-		_ = views.HomeView(&grid).Render(c.Writer)
+		_ = views.HomeView(&grid, e).Render(c.Writer)
 	}
 }
 
@@ -47,7 +51,10 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 	return func(c *gin.Context) {
 		gameCookie, err := c.Cookie("game")
 		if err != nil {
-			c.Status(http.StatusBadRequest)
+			v := url.Values{
+				"error": {"Game cookie is not present"},
+			}
+			c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
 			return
 		}
 		grid := wordlesite.Grid{}
@@ -58,13 +65,18 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 		}
 		input, ok := c.GetPostFormArray("char")
 		if !ok || len(input) != 5 {
-			c.Status(http.StatusBadRequest)
+			v := url.Values{
+				"error": {"Invalid Input"},
+			}
+			c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
 			return
 		}
 		for i := 0; i < len(input); i++ {
 			if len(input[i]) != 1 || !unicode.IsLetter(rune(input[i][0])) {
-				c.Status(http.StatusBadRequest)
-				return
+				v := url.Values{
+					"error": {"Only Letters are accepted"},
+				}
+				c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
 			}
 		}
 		activeRow := 0
@@ -76,8 +88,16 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 		word := strings.ToLower(strings.Join(input, ""))
 		result, err := grid.Word.Guess(word)
 		if err != nil {
-			c.Status(http.StatusInternalServerError)
-			return
+			if errors.Is(err, wordlesite.NotAWord) {
+				v := url.Values{
+					"error": {"Input it not a valid word"},
+				}
+				c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
+				return
+			} else {
+				c.Status(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		grid.State[activeRow] = *result

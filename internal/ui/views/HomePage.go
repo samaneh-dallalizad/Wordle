@@ -9,7 +9,16 @@ import (
 	. "github.com/maragudk/gomponents/html"
 )
 
-func HomeView(g *wordlesite.Grid) g.Node {
+func HomeView(p *wordlesite.Grid, e string) g.Node {
+	modalInfo := components.ModalInfo{
+		IsActive:  "",
+		ElementId: "mod",
+		Content:   e,
+		Title:     "Error",
+	}
+	if e != "" {
+		modalInfo.IsActive = "is-active"
+	}
 
 	componentsView := Doctype(
 		HTML(
@@ -35,8 +44,8 @@ func HomeView(g *wordlesite.Grid) g.Node {
 
 				Div(Class("container"),
 					components.HowPlayGame(),
-					components.GameArea(g),
-					//components..Modal(),
+					components.GameArea(p),
+					modalInfo.Modal(),
 				),
 			),
 		),

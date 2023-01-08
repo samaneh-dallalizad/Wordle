@@ -6,7 +6,7 @@ import (
 )
 
 func HowPlayGame() g.Node {
-	return Div(Class("notification is-link"),
+	return Div(Class("notification is-link mt-5"),
 
 		Button(Class("delete")),
 		P(g.Text("Guess the WORDLE in "), Strong(g.Text("6")), g.Text(" tries.")),

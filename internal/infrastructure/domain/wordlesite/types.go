@@ -3,6 +3,7 @@ package wordlesite
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -32,6 +33,8 @@ type Grid struct {
 	Word  Word
 	State [6]GuessResult
 }
+
+var NotAWord = errors.New("Not a word")
 
 func (w *Word) Guess(guess string) (*GuessResult, error) {
 	c := http.Client{Timeout: time.Duration(10) * time.Second}
@@ -75,6 +78,10 @@ func (w *Word) Guess(guess string) (*GuessResult, error) {
 
 	fmt.Printf("Body : %s", body)
 
+	if resp.StatusCode == 400 {
+		fmt.Printf("Input is not a word: %s", guess)
+		return nil, NotAWord
+	}
 	ret := GuessResult{}
 	jsonErr := json.Unmarshal(body, &ret)
 	if jsonErr != nil {
