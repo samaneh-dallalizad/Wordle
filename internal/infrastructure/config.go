@@ -8,12 +8,10 @@ import (
 
 // ApplicationEnvironment is the required application environment variables.
 type ApplicationEnvironment struct {
-	ApplicationMode   string
-	APIURL            string
-	MobileHeaderLogo  string
-	DesktopHeaderLogo string
-	WebAssetsFolder   string
-	BindAddr          string
+	ApplicationMode string
+	APIURL          string
+	WebAssetsFolder string
+	BindAddr        string
 }
 
 // ConfigSetup will prepare and setup the viper instance to the correct config file.
@@ -24,26 +22,23 @@ func ConfigSetup(configName, configPath string) {
 }
 
 func GetConfig() ApplicationEnvironment {
-	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
+	// Handle errors reading the config file
+	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("fatal error config file: %s", err)
 	}
 
 	ValidateVariablesAreSet([]string{
 		"ApplicationMode",
 		"APIURL",
-		"DesktopHeaderLogo",
-		"MobileHeaderLogo",
 		"WebAssetsFolder",
 		"BindAddr",
 	})
 
 	return ApplicationEnvironment{
-		ApplicationMode:   viper.GetString("ApplicationMode"),
-		APIURL:            viper.GetString("APIURL"),
-		MobileHeaderLogo:  viper.GetString("MobileHeaderLogo"),
-		DesktopHeaderLogo: viper.GetString("DesktopHeaderLogo"),
-		WebAssetsFolder:   viper.GetString("WebAssetsFolder"),
-		BindAddr:          viper.GetString("BindAddr"),
+		ApplicationMode: viper.GetString("ApplicationMode"),
+		APIURL:          viper.GetString("APIURL"),
+		WebAssetsFolder: viper.GetString("WebAssetsFolder"),
+		BindAddr:        viper.GetString("BindAddr"),
 	}
 }
 

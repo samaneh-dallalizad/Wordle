@@ -10,16 +10,13 @@ import (
 
 var classForResponse = []string{"has-background-dark", "has-background-warning", "has-background-success"}
 
-func GameArea(d *wordlesite.Grid) g.Node {
+func GameArea(d *wordlesite.Game) g.Node {
 	var row = -1
-	var activeRow = 0
+	var activeRow = d.ActiveRow
 	return FormEl(Method("post"), Action("/guess_result"), Div(
 		Ul(Class("my-5"),
-			g.Group(g.Map(d.State[:], func(r wordlesite.GuessResult) g.Node {
+			g.Group(g.Map(d.Grid[:], func(r wordlesite.GuessResult) g.Node {
 				row += 1
-				if r[0].Letter != "" {
-					activeRow += 1
-				}
 				return Li(Class(fmt.Sprintf("columns is-multiline row row-%d", row)),
 					g.Group(g.Map(r[:], func(b wordlesite.Block) g.Node {
 						return Div(Class("column is-1 row-block"),

@@ -3,12 +3,9 @@ package app
 import (
 	"fmt"
 	"net/http"
-
-	//"strings"
 	"time"
 
 	"wordleGame/internal/infrastructure"
-	"wordleGame/internal/infrastructure/domain/wordlesite"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,35 +24,9 @@ func (s *ApplicationServer) registerHandlers() {
 
 	s.State.Handler.Use(s.errhandler())
 	s.State.Handler.Static("/scripts", fmt.Sprintf("%sweb/scripts", s.State.Config.WebAssetsFolder))
-	s.State.Handler.Static("/styles", fmt.Sprintf("%sweb/styles", s.State.Config.WebAssetsFolder))
-	s.State.Handler.Static("/assets", fmt.Sprintf("%sweb/assets", s.State.Config.WebAssetsFolder))
 	s.State.Handler.Handle(http.MethodGet, "/", s.HomePageHandler())
 	s.State.Handler.Handle(http.MethodPost, "/guess_result", s.SubmitGuessHandler())
 	s.State.Handler.Handle(http.MethodGet, "/new_game", s.StartNewGame())
-	s.State.Handler.Handle(http.MethodGet, "/test_new_game", func(c *gin.Context) {
-		resp, err := wordlesite.StartGame()
-		if err != nil {
-			c.IndentedJSON(http.StatusOK, err)
-			return
-		}
-		c.IndentedJSON(http.StatusOK, resp)
-	},
-	)
-
-	s.State.Handler.Handle(http.MethodGet, "/test_guess", func(c *gin.Context) {
-		resp, err := wordlesite.StartGame()
-		if err != nil {
-			c.IndentedJSON(http.StatusOK, err)
-			return
-		}
-		guessResp, err := resp.Guess("books")
-		if err != nil {
-			c.IndentedJSON(http.StatusOK, err)
-			return
-		}
-		c.IndentedJSON(http.StatusOK, guessResp)
-	},
-	)
 
 	s.State.Handler.NoRoute(s.err404PageHandler())
 

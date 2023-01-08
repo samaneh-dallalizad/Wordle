@@ -1,6 +1,4 @@
 ApplicationMode = "debug"
 APIURL = "http://localhost:8080"
-MobileHeaderLogo = "/assets/store_specific/pro-warehouse/fogvw4vnvfq5fzah7z8x"
-DesktopHeaderLogo = "/assets/store_specific/pro-warehouse/fogvw4vnvfq5fzah7z8x"
 WebAssetsFolder = "../../"
 BindAddr = ":8080"

@@ -16,53 +16,66 @@ import (
 func (s *ApplicationServer) HomePageHandler() func(*gin.Context) {
 
 	return func(c *gin.Context) {
+		//get any error from query string
 		e := c.DefaultQuery("error", "")
-
+		//get current state from cookie
 		gameCookie, err := c.Cookie("game")
+		//if we do not have game cookie(we need to start a new game)/only happen in the first time or user click on start new game
 		if err != nil {
-			word, startErr := wordlesite.StartGame()
+			startGameWord, startErr := wordlesite.StartGame()
 			if startErr != nil {
 				c.Status(http.StatusInternalServerError)
 				return
 			}
-			grid := &wordlesite.Grid{
-				Word: *word,
+			//set word in game table
+			gameTable := wordlesite.Game{
+				Word:      *startGameWord,
+				ActiveRow: 0,
 			}
-			game, jsonErr := json.Marshal(grid)
+			//json encode
+			game, jsonErr := json.Marshal(&gameTable)
 			if jsonErr != nil {
 				c.Status(http.StatusInternalServerError)
 				return
 			}
+			//store game table in cookie
 			gameCookie = string(game)
 			c.SetCookie("game", gameCookie, 3600, "/", "localhost", false, true)
 		}
-		grid := wordlesite.Grid{}
-		err = json.Unmarshal([]byte(gameCookie), &grid)
+		//if gamecookie is available we just show it
+		gameTable := wordlesite.Game{}
+		//json decode
+		err = json.Unmarshal([]byte(gameCookie), &gameTable)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
 		c.Status(http.StatusOK)
-		_ = views.HomeView(&grid, e).Render(c.Writer)
+		_ = views.HomeView(&gameTable, e).Render(c.Writer)
 	}
 }
 
 func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 	return func(c *gin.Context) {
+		// get cookie
 		gameCookie, err := c.Cookie("game")
+		//if cookie is not present
 		if err != nil {
+			//create error query string
 			v := url.Values{
 				"error": {"Game cookie is not present"},
 			}
 			c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
 			return
 		}
-		grid := wordlesite.Grid{}
-		err = json.Unmarshal([]byte(gameCookie), &grid)
+		//cookie is present
+		gameTable := wordlesite.Game{}
+		err = json.Unmarshal([]byte(gameCookie), &gameTable)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
+		//get inputs
 		input, ok := c.GetPostFormArray("char")
 		if !ok || len(input) != 5 {
 			v := url.Values{
@@ -71,6 +84,8 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 			c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
 			return
 		}
+
+		//validate inputs just be letter
 		for i := 0; i < len(input); i++ {
 			if len(input[i]) != 1 || !unicode.IsLetter(rune(input[i][0])) {
 				v := url.Values{
@@ -79,14 +94,9 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 				c.Redirect(http.StatusSeeOther, "/?"+v.Encode())
 			}
 		}
-		activeRow := 0
-		for i := 0; i < len(grid.State); i++ {
-			if grid.State[i][0].Letter != "" {
-				activeRow += 1
-			}
-		}
+
 		word := strings.ToLower(strings.Join(input, ""))
-		result, err := grid.Word.Guess(word)
+		result, err := gameTable.Word.Guess(word)
 		if err != nil {
 			if errors.Is(err, wordlesite.NotAWord) {
 				v := url.Values{
@@ -100,9 +110,10 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 			}
 		}
 
-		grid.State[activeRow] = *result
+		gameTable.Grid[gameTable.ActiveRow] = *result
+		gameTable.ActiveRow = gameTable.ActiveRow + 1
 
-		game, jsonErr := json.Marshal(grid)
+		game, jsonErr := json.Marshal(gameTable)
 		if jsonErr != nil {
 			c.Status(http.StatusInternalServerError)
 			return
@@ -116,8 +127,9 @@ func (s *ApplicationServer) SubmitGuessHandler() func(*gin.Context) {
 
 func (s *ApplicationServer) StartNewGame() func(*gin.Context) {
 	return func(c *gin.Context) {
+		//remove cookie
 		c.SetCookie("game", "", -1, "/", "localhost", false, true)
-
+		//redirect to homepage
 		c.Redirect(http.StatusSeeOther, "/")
 
 	}

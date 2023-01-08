@@ -9,7 +9,7 @@ import (
 	. "github.com/maragudk/gomponents/html"
 )
 
-func HomeView(p *wordlesite.Grid, e string) g.Node {
+func HomeView(w *wordlesite.Game, e string) g.Node {
 	modalInfo := components.ModalInfo{
 		IsActive:  "",
 		ElementId: "mod",
@@ -44,7 +44,7 @@ func HomeView(p *wordlesite.Grid, e string) g.Node {
 
 				Div(Class("container"),
 					components.HowPlayGame(),
-					components.GameArea(p),
+					components.GameArea(w),
 					modalInfo.Modal(),
 				),
 			),
